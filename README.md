@@ -1,4 +1,4 @@
-# 💻 Tên Dự Án - Frontend (Client)
+# 💻 Doctor_Appointment_Booking_System - Frontend (Client)
 
 Đây là phần giao diện người dùng (Frontend) của dự án, được xây dựng bằng **Vue.js**.
 
@@ -20,16 +20,22 @@
 
 Mở terminal tại thư mục `clone dự án` và chạy lệnh sau để tải các thư viện cần thiết:
 
+```
 npm install
+```
 
 ### 2. Chạy môi trường phát triển (Development)
 
 Để khởi chạy ứng dụng ở môi trường code:
 
+```
 npm run dev
+```
 
 ### 3. Build ứng dụng cho môi trường thực tế (Production)
 
 Khi dự án hoàn thiện và cần deploy, hãy chạy lệnh:
 
+```
 npm run build
+```
