@@ -1,10 +1,12 @@
 import { createRouter, createWebHistory } from "vue-router";
 //Client/main view
+import PatientLayout from "../components/layout/PatientLayout.vue";
 import LoginView from "../views/auth/LoginView.vue";
 import RegisterView from "../views/auth/RegisterView.vue";
 import FindDoctorView from "../views/patient/FindDoctorView.vue";
 import BookingView from "../views/patient/BookingView.vue";
 import HistoryView from "../views/patient/HistoryView.vue";
+import DepositView from "../views/patient/DepositView.vue";
 
 //Admin view
 import AdminLayout from "../components/layout/AdminLayout.vue";
@@ -13,6 +15,11 @@ import DashboardView from "../views/admin/DashboardView.vue";
 import ManageAppointments from "../views/admin/ManageAppointments.vue";
 import ManageSpecialties from "../views/admin/ManageSpecialties.vue";
 import ManageClinics from "../views/admin/ManageClinics.vue";
+import ManageFeedbacks from "../views/admin/ManageFeedbacks.vue";
+
+//Doctor view
+import DoctorLayout from "../components/layout/DoctorLayout.vue";
+import DoctorSchedule from "../views/doctor/DoctorSchedule.vue";
 
 // trang chủ
 import HomeView from "../views/patient/HomeView.vue";
@@ -30,8 +37,14 @@ const routes = [
   },
   {
     path: "/",
-    name: "Home",
-    component: HomeView,
+    component: PatientLayout,
+    children: [
+      { path: "", name: "Home", component: HomeView },
+      { path: "find-doctor", name: "FindDoctor", component: FindDoctorView },
+      { path: "booking/:id", name: "Booking", component: BookingView },
+      { path: "history", name: "History", component: HistoryView },
+      { path: "deposit", name: "Deposit", component: DepositView },
+    ],
   },
   {
     path: "/admin",
@@ -55,22 +68,20 @@ const routes = [
         name: "ManageClinics",
         component: ManageClinics,
       },
+      {
+        path: "feedbacks",
+        name: "ManageFeedbacks",
+        component: ManageFeedbacks,
+      },
     ],
   },
   {
-    path: "/doctors",
-    name: "FindDoctor",
-    component: FindDoctorView, // Đường dẫn trang Tìm bác sĩ
-  },
-  {
-    path: "/booking/:id", // :id là doctorId
-    name: "Booking",
-    component: BookingView,
-  },
-  {
-    path: "/history",
-    name: "History",
-    component: HistoryView,
+    path: "/doctor",
+    component: DoctorLayout,
+    children: [
+      { path: "", redirect: "/doctor/schedule" },
+      { path: "schedule", name: "DoctorSchedule", component: DoctorSchedule },
+    ],
   },
 ];
 
@@ -115,8 +126,27 @@ router.beforeEach((to, from, next) => {
       return next("/");
     }
   }
+  // 4. BẢO VỆ ROUTE DOCTOR
+  if (to.path.startsWith("/doctor")) {
+    let user = null;
 
-  // 4. Mọi điều kiện đều thỏa mãn -> Cho phép đi tiếp
+    // Đưa JSON.parse vào try...catch để chống crash ứng dụng
+    try {
+      const userString = localStorage.getItem("user");
+      if (userString) {
+        user = JSON.parse(userString);
+      }
+    } catch (error) {
+      console.error("Dữ liệu user trong localStorage bị lỗi định dạng", error);
+      // Có thể thêm logic xóa localStorage bị hỏng tại đây: localStorage.removeItem("user")
+    }
+    if (!user || user.role !== "doctor") {
+      alert("Chỉ Bác sĩ mới được truy cập!");
+      return next("/");
+    }
+  }
+
+  // 5. Mọi điều kiện đều thỏa mãn -> Cho phép đi tiếp
   next();
 });
 

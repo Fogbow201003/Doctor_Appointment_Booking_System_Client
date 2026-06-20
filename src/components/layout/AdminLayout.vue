@@ -32,6 +32,9 @@
           active-class="bg-blue-600 text-white">
           Quản lý Lịch hẹn
         </router-link>
+        <router-link to="/admin/feedbacks"
+          class="block py-2.5 px-4 rounded transition hover:bg-slate-700 hover:text-white"
+          active-class="bg-blue-600 text-white">Quản lý Phản hồi</router-link>
       </nav>
 
       <div class="p-4 border-t border-slate-700">

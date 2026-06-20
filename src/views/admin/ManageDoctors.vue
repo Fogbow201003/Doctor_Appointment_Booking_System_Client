@@ -44,38 +44,69 @@
       </table>
     </div>
 
-    <div v-if="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-lg w-full max-w-md p-6">
-        <h3 class="text-xl font-bold mb-4">{{ editMode ? 'Cập nhật Bác sĩ' : 'Thêm Bác sĩ mới' }}</h3>
+    <div v-if="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-lg w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+        <h3 class="text-xl font-bold mb-4">{{ editMode ? 'Cập nhật Bác sĩ' : 'Thêm Bác sĩ mới & Cấp tài khoản' }}</h3>
+
         <form @submit.prevent="handleSubmit" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Họ và Tên</label>
-            <input v-model="form.fullName" type="text" required class="w-full border rounded px-3 py-2">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">Họ và Tên Bác sĩ</label>
+              <input v-model="form.fullName" type="text" required class="w-full border rounded px-3 py-2">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Số điện thoại</label>
+              <input v-model="form.phone" type="tel" class="w-full border rounded px-3 py-2">
+            </div>
+
+            <div class="col-span-1 md:col-span-2 bg-blue-50 p-4 rounded-md border border-blue-100">
+              <h4 class="text-sm font-semibold text-blue-800 mb-3">Tài khoản đăng nhập cho Bác sĩ</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Email đăng nhập</label>
+                  <input v-model="form.email" type="email" :required="!editMode" :disabled="editMode"
+                    class="w-full border rounded px-3 py-2 disabled:bg-gray-200"
+                    :placeholder="editMode ? 'Không thể đổi email' : 'bacsia@phongkham.com'">
+                </div>
+                <div v-if="!editMode">
+                  <label class="block text-sm font-medium mb-1">Mật khẩu cấp tạm</label>
+                  <input v-model="form.password" type="password" required class="w-full border rounded px-3 py-2">
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Chuyên khoa</label>
+              <select v-model="form.specialty" required class="w-full border rounded px-3 py-2">
+                <option v-for="s in specialties" :key="s._id" :value="s._id">{{ s.name }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Phòng khám</label>
+              <select v-model="form.clinic" required class="w-full border rounded px-3 py-2">
+                <option v-for="c in clinics" :key="c._id" :value="c._id">{{ c.name }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Phí khám (VNĐ)</label>
+              <input v-model="form.consultationFee" type="number" required min="0" step="10000"
+                class="w-full border rounded px-3 py-2">
+            </div>
+
+            <div v-if="editMode" class="flex items-center mt-6">
+              <input v-model="form.isActive" type="checkbox" id="isActive" class="mr-2 h-4 w-4 text-blue-600">
+              <label for="isActive" class="text-sm font-medium">Hoạt động (Hiển thị trên hệ thống)</label>
+            </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Chuyên khoa</label>
-            <select v-model="form.specialty" required class="w-full border rounded px-3 py-2">
-              <option v-for="s in specialties" :key="s._id" :value="s._id">{{ s.name }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Phòng khám</label>
-            <select v-model="form.clinic" required class="w-full border rounded px-3 py-2">
-              <option v-for="c in clinics" :key="c._id" :value="c._id">{{ c.name }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Phí khám (VNĐ)</label>
-            <input v-model="form.consultationFee" type="number" required class="w-full border rounded px-3 py-2">
-          </div>
-          <div v-if="editMode" class="flex items-center mt-2">
-            <input v-model="form.isActive" type="checkbox" class="mr-2 h-4 w-4 text-blue-600">
-            <label class="text-sm font-medium">Hoạt động (Hiển thị trên hệ thống)</label>
-          </div>
-          <div class="flex justify-end space-x-3 mt-6">
+
+          <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
             <button type="button" @click="closeModal"
               class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50">Hủy</button>
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Lưu</button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Lưu Thông
+              Tin</button>
           </div>
         </form>
       </div>
@@ -99,6 +130,9 @@ const currentDoctorId = ref(null);
 
 const form = reactive({
   fullName: '',
+  email: '',
+  password: '',
+  phone: '',
   specialty: '',
   clinic: '',
   consultationFee: 100000,
@@ -111,7 +145,6 @@ const fetchData = async () => {
   isLoading.value = true;
   try {
     const [docRes, clinicRes, specRes] = await Promise.all([
-      // Truyền tham số rỗng để lấy toàn bộ, kể cả bác sĩ đã ẩn (nếu backend bạn viết getDoctors có filter isActive, có thể cần chỉnh lại API backend xíu cho admin thấy cả người đã ẩn, tạm thời mình cứ gọi api thường)
       doctorService.getDoctors({}),
       doctorService.getClinics(),
       adminService.getSpecialties()
@@ -119,7 +152,6 @@ const fetchData = async () => {
     doctors.value = docRes.data.doctors;
     specialties.value = specRes.data.specialties;
     clinics.value = clinicRes.data.clinics;
-
   } catch (error) {
     console.error(error);
   } finally {
@@ -129,7 +161,17 @@ const fetchData = async () => {
 
 const openAddModal = () => {
   editMode.value = false;
-  Object.assign(form, { fullName: '', specialty: '', clinic: '', consultationFee: 100000, isActive: true });
+  // Đảm bảo reset cả email, password và phone khi thêm mới
+  Object.assign(form, {
+    fullName: '',
+    email: '',
+    password: '',
+    phone: '',
+    specialty: '',
+    clinic: '',
+    consultationFee: 100000,
+    isActive: true
+  });
   isModalOpen.value = true;
 };
 
@@ -138,12 +180,16 @@ const openEditModal = (doctor) => {
   currentDoctorId.value = doctor._id;
   Object.assign(form, {
     fullName: doctor.fullName,
-    specialty: doctor.specialty?.name,
-    clinic: doctor.clinic._id || doctor.clinic,
+    // Email và password thường không thay đổi ở form này, set rỗng hoặc lấy từ accountId (nếu backend có trả về)
+    email: '',
+    password: '',
+    phone: doctor.phone || '',
+    // Sửa lỗi ở đây: phải lấy _id của chuyên khoa thay vì lấy name
+    specialty: doctor.specialty?._id || doctor.specialty,
+    clinic: doctor.clinic?._id || doctor.clinic,
     consultationFee: doctor.consultationFee,
     isActive: doctor.isActive
   });
-  console.log('Edit form data:', form);
   isModalOpen.value = true;
 };
 
@@ -152,10 +198,20 @@ const closeModal = () => { isModalOpen.value = false; };
 const handleSubmit = async () => {
   try {
     if (editMode.value) {
-      await adminService.updateDoctor(currentDoctorId.value, form);
+      // Khi update, ta chỉ gửi các thông tin liên quan đến hồ sơ bác sĩ
+      const updateData = {
+        fullName: form.fullName,
+        phone: form.phone,
+        specialty: form.specialty,
+        clinic: form.clinic,
+        consultationFee: form.consultationFee,
+        isActive: form.isActive
+      };
+      await adminService.updateDoctor(currentDoctorId.value, updateData);
     } else {
       await adminService.createDoctor(form);
     }
+    alert(editMode.value ? 'Cập nhật thành công!' : 'Thêm bác sĩ thành công!');
     closeModal();
     fetchData(); // Reload table
   } catch (error) {

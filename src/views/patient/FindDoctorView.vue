@@ -1,29 +1,18 @@
 <template>
   <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
-      <div class="flex justify-between items-center mb-8 bg-white p-4 rounded-lg shadow-sm">
-        <h1 class="text-2xl font-bold text-blue-600">Hệ thống Đặt lịch Khám</h1>
-        <div class="space-x-4">
-          <router-link to="/" class="text-gray-600 hover:text-blue-600 font-medium">Trang chủ</router-link>
-          <button v-if="authStore.isAuthenticated" @click="handleLogout"
-            class="text-red-500 hover:underline font-medium">
-            Đăng xuất
-          </button>
-        </div>
-      </div>
-
       <h2 class="text-3xl font-extrabold text-gray-900 mb-6">Tìm kiếm Bác sĩ</h2>
 
-      <div class="bg-white p-6 rounded-lg shadow-md mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white p-6 rounded-lg shadow-md mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Tìm theo tên</label>
-          <input v-model="filters.search" @input="fetchDoctors" type="text" placeholder="Nhập tên bác sĩ..."
+          <input v-model="filters.search" @keyup.enter="fetchDoctors" type="text" placeholder="Nhập tên bác sĩ..."
             class="w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500">
         </div>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Khu vực Phòng khám</label>
-          <select v-model="filters.clinicId" @change="fetchDoctors"
+          <select v-model="filters.clinicId"
             class="w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500">
             <option value="">-- Tất cả phòng khám --</option>
             <option v-for="clinic in clinics" :key="clinic._id" :value="clinic._id">
@@ -34,15 +23,24 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Chuyên khoa</label>
-          <select v-model="filters.specialty" @change="fetchDoctors"
+          <select v-model="filters.specialty"
             class="w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500">
             <option value="">-- Tất cả chuyên khoa --</option>
-            <option value="Nội khoa">Nội khoa</option>
-            <option value="Ngoại khoa">Ngoại khoa</option>
-            <option value="Nhi khoa">Nhi khoa</option>
-            <option value="Da liễu">Da liễu</option>
-            <option value="Tai Mũi Họng">Tai Mũi Họng</option>
+            <option v-for="spec in specialties" :key="spec._id" :value="spec._id">
+              {{ spec.name }}
+            </option>
           </select>
+        </div>
+
+        <div>
+          <button @click="fetchDoctors"
+            class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition flex justify-center items-center h-[42px]">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            Tìm kiếm
+          </button>
         </div>
       </div>
 
@@ -69,7 +67,7 @@
                 <h3 class="text-lg font-bold text-gray-900">BS. {{ doctor.fullName }}</h3>
                 <span
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  {{ doctor.specialty }}
+                  {{ doctor.specialty?.name }}
                 </span>
               </div>
             </div>
@@ -102,38 +100,37 @@ import { ref, reactive, onMounted } from 'vue';
 import { doctorService } from '../../services/doctorService';
 import { useAuthStore } from '../../stores/authStore';
 import { useRouter } from 'vue-router';
+import api from '../../services/api';
 
 const authStore = useAuthStore();
 const router = useRouter();
 
 const clinics = ref([]);
+const specialties = ref([]);
 const doctors = ref([]);
 const isLoading = ref(true);
 
-// State cho bộ lọc
 const filters = reactive({
   search: '',
   clinicId: '',
   specialty: ''
 });
 
-// Format tiền tệ VNĐ
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 
-// Đăng xuất
-const handleLogout = () => {
-  authStore.logout();
-  router.push('/login');
-};
-
-// Fetch dữ liệu từ API
 const loadInitialData = async () => {
   try {
     isLoading.value = true;
-    const clinicRes = await doctorService.getClinics();
+    const [clinicRes, specRes] = await Promise.all([
+      doctorService.getClinics(),
+      api.get('/specialties')
+    ]);
+
     clinics.value = clinicRes.data.clinics;
+    specialties.value = specRes.data.specialties;
+
     await fetchDoctors();
   } catch (error) {
     console.error('Lỗi khi tải dữ liệu:', error);
@@ -144,10 +141,13 @@ const loadInitialData = async () => {
 
 const fetchDoctors = async () => {
   try {
+    isLoading.value = true; // Thêm loading cho mỗi lần bấm tìm kiếm
     const res = await doctorService.getDoctors(filters);
     doctors.value = res.data.doctors;
   } catch (error) {
     console.error('Lỗi khi tìm bác sĩ:', error);
+  } finally {
+    isLoading.value = false;
   }
 };
 

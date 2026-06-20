@@ -55,11 +55,16 @@ const router = useRouter();
 
 const handleLogin = async () => {
   try {
-    const { user } = await authStore.login({ email: email.value, password: password.value });
-    if (user.role === 'admin') {
-      router.push('/admin/dashboard'); // Đẩy về dashboard admin nếu là admin
+    const res = await authStore.login({ email: email.value, password: password.value });
+    const userRole = res.user.role;
+
+    // Phân luồng trang đích
+    if (userRole === 'admin') {
+      router.push('/admin/dashboard');
+    } else if (userRole === 'doctor') {
+      router.push('/doctor/schedule');
     } else {
-      router.push('/'); // Đẩy về trang chủ nếu là bệnh nhân
+      router.push('/'); // Patient
     }
   } catch (error) {
     console.error('Lỗi login:', error);
